@@ -26,3 +26,22 @@ def make_untranslated_txt(language):
         for line in sorted(map(get_untranslated_info_line, missing_translates)):
             f.write(line)
 
+def make_overtranslated_txt(language):
+    """
+    Prints a list of translations lacking basegame nodes for `language`.
+    """
+
+    translator = renpy.game.script.translator
+
+    excess_translates = set()
+
+    for (tlblockid, l), translate in translator.language_translates.items():
+        if l != language:
+            continue
+        if tlblockid in translator.default_translates:
+            continue
+        excess_translates.add(translate)
+
+    with io.open('overtranslated.txt','w',encoding='utf-8') as f:
+        for line in sorted(map(get_untranslated_info_line, excess_translates)):
+            f.write(line)

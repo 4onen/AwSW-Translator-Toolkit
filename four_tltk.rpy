@@ -36,6 +36,15 @@ init:
                 ]
                 hovered Play("audio", "se/sounds/select.ogg"),
                 align (0.5,0.5)
+            
+            textbutton "Make overtranslated.txt listing all overtranslated nodes in the current language.":
+                action [
+                    Function(four_tltk.tltk.make_overtranslated_txt,preferences.language),
+                    Play("audio", "se/sounds/close.ogg"),
+                    Show('nsfw_ok_prompt',dissolve,"overtranslated.txt has been placed in your game directory."),
+                ]
+                hovered Play("audio", "se/sounds/select.ogg"),
+                align (0.5,0.5)
 
 
 label four_tltk_activate_test_language:
