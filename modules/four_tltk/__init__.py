@@ -17,31 +17,29 @@ def make_untranslated_txt(language):#, min_priority, max_priority, common_only):
     #             missing_translates.add(t.identifier)
     #         else:
     #             print(t.identifier,'is translated',t.identifier == translator.language_translates[(t.identifier, language)].identifier)
-    for tlblockid in translator.default_translates:
+    for tlblockid, translate in translator.default_translates.items():
         if (tlblockid, language) not in translator.language_translates:
-            missing_translates.add(tlblockid)
+            missing_translates.add((translate.filename,translate.linenumber,tlblockid))
 
-    missing_strings = set()
+    # missing_strings = set()
 
-    stl = renpy.game.script.translator.strings[language]  # @UndefinedVariable
+    # stl = renpy.game.script.translator.strings[language]  # @UndefinedVariable
 
-    strings = renpy.translation.scanstrings.scan(common_only=False)
+    # strings = renpy.translation.scanstrings.scan(common_only=False)
 
-    for s in strings:
+    # for s in strings:
 
-        tlfn = renpy.translation.generation.translation_filename(s)
+    #     tlfn = renpy.translation.generation.translation_filename(s)
 
-        if tlfn is None:
-            continue
+    #     if tlfn is None:
+    #         continue
 
-        if s.text in stl.translations:
-            continue
+    #     if s.text in stl.translations:
+    #         continue
 
-        missing_strings.add(s.text)
+    #     missing_strings.add(s.text)
 
 
     with io.open('untranslated.txt','w',encoding='utf-8') as f:
-        f.write(u'\n'.join(sorted(missing_translates)))
-        f.write(u'\n\n')
-        f.write(u'\n'.join(sorted(missing_strings)))
+        f.write(u'\n'.join(sorted(map(lambda t: u':'.join(map(unicode,t)),missing_translates))))
 
