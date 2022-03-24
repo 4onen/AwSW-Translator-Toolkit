@@ -37,3 +37,8 @@ init:
                 hovered Play("audio", "se/sounds/select.ogg"),
                 align (0.5,0.5)
 
+
+label four_tltk_activate_test_language:
+    $ renpy.change_language("testtl")
+
+    jump four_tltk_activate_test_language_end

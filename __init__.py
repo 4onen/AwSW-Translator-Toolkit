@@ -2,7 +2,18 @@ from modloader.modclass import Mod, loadable_mod
 
 import jz_magmalink as ml
 
-import renpy.game
+
+def link_test_langauge():
+    cn = ( ml.find_label("splashscreen")
+            .search_if("persistent.lang == \"Jp\"")
+    )
+    ( cn.branch()
+        .search_menu().add_choice(text="Test Language", jump="four_tltk_activate_test_language")
+    )
+    ( cn.branch_else()
+        .search_menu().add_choice(text="Test Language", jump="four_tltk_activate_test_language")
+    )
+    cn.link_behind_from("four_tltk_activate_test_language_end")
 
 @loadable_mod
 class MyAwSWMod(Mod):
@@ -22,6 +33,8 @@ class MyAwSWMod(Mod):
                 ])
             .compile_to("main_menu")
         )
+
+        # link_test_language()
 
     @staticmethod
     def mod_complete():

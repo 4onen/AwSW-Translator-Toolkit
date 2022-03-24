@@ -10,10 +10,16 @@ def make_untranslated_txt(language):#, min_priority, max_priority, common_only):
 
     missing_translates = set()
 
-    for filename in renpy.translation.generation.translate_list_files():
-        for _, t in translator.file_translates[filename]:
-            if (t.identifier, language) not in translator.language_translates:
-                missing_translates.add(t.identifier)
+    # for filename in renpy.translation.generation.translate_list_files():
+    #     print("Checking translations in {}".format(filename))
+    #     for _, t in translator.file_translates[filename]:
+    #         if (t.identifier, language) not in translator.language_translates:
+    #             missing_translates.add(t.identifier)
+    #         else:
+    #             print(t.identifier,'is translated',t.identifier == translator.language_translates[(t.identifier, language)].identifier)
+    for tlblockid in translator.default_translates:
+        if (tlblockid, language) not in translator.language_translates:
+            missing_translates.add(tlblockid)
 
     missing_strings = set()
 
