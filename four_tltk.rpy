@@ -30,6 +30,17 @@ init python in four_tltk:
     source = FileInputValue("game/mods/")
     target = FileInputValue("game/mods/")
 
+    def write_translations():
+        tltk.write_translations(source.get_text(), target.get_text(), selected_filter)
+
+    class SensitiveFunction(renpy.store.Function):
+        def __init__(self, sensitivity, callable, *args, **kwargs):
+            super(SensitiveFunction, self).__init__(callable, *args, **kwargs)
+            self.sensitivity = sensitivity
+
+        def get_sensitive(self):
+            return self.sensitivity()
+
     tlstats = ""
 
     def update_tlstats_screen():
@@ -37,20 +48,24 @@ init python in four_tltk:
 
         s = tltk.calculate_tl_stats(source.get_text(), target.get_text())
 
-        tlstats = """
-Ren'Py files found - %u
-TL-able blocks found - %u
-"[preferences.language]"s found - %u
-TL-able blocks translated - %u
-TL-able blocks missing - %u
-Excess TLs - %u
-""" % s
+        if s:
+            tlstats = ("""
+    Src Ren'Py files found - %u
+    Tgt Ren'Py files found - %u
+    TL-able blocks found - %u
+    "%%s"s found - %u
+    TL-able blocks translated - %u
+    TL-able blocks missing - %u
+    Excess TLs - %u
+    """ % s) % renpy.store.preferences.language
+        else:
+            tlstats = "No Ren'Py files found."
 
     stlstats = ""
 
     def update_stlstats_screen():
         global stlstats
-        stlstats = "String translations (e.g. menu options) not yet implemented."
+        stlstats = "String translations not yet implemented."
 
 init -1 python:
     style.four_tltk_button = Style(style.default)
@@ -88,7 +103,14 @@ init:
                     text "[suffix]"
 
     screen four_tltk_screen():
-        text _("Mod Translator's Toolkit") align (0.5, 0.1) bold True size 40
+        vbox:
+            align (0.5, 0.1)
+            text _("Mod Translator's Toolkit") bold True size 40
+            textbutton _("Show testscene"):
+                action [Play("audio", "fx/start.ogg"), Start('four_tltk_testscene')]
+                hovered Play("audio", "se/sounds/select.ogg")
+                style "four_tltk_button"
+
 
         if preferences.language is None:
             text _("Select a non-default language to generate translation files.") style "four_tltk_warningtext" align (0.5, 0.5)
@@ -118,7 +140,7 @@ init:
 
                 vbox:
                     use four_tltk_file_select("Source: ", four_tltk.source)
-                    use four_tltk_file_select("Target: ", four_tltk.target, "/tl/[preferences.language]")
+                    use four_tltk_file_select("Target: ", four_tltk.target, "/tl/%s/"%preferences.language)
 
                     if not four_tltk.source.exists():
                         text "No target." style 'four_tltk_warningtext'
@@ -139,16 +161,28 @@ init:
 
                     vbox:
                         yminimum 300
+
+                        textbutton _("Clear Stats") action [SetField(four_tltk,'tlstats',""), SetField(four_tltk,'stlstats',""), Play("audio", "se/sounds/select.ogg")] hovered Play("audio", "se/sounds/select.ogg") style "four_tltk_button"
+
                         if not four_tltk.tlstats:
-                            textbutton _("Calculate Translation Stats") action [Function(four_tltk.update_tlstats_screen), Play("audio", "se/sounds/select.ogg")] hovered Play("audio", "se/sounds/select.ogg") style "four_tltk_button"
+                            textbutton _("Calculate Translation Stats") action [four_tltk.SensitiveFunction(four_tltk.source.exists, four_tltk.update_tlstats_screen), Play("audio", "se/sounds/select.ogg")] hovered Play("audio", "se/sounds/select.ogg") style "four_tltk_button"
                         else:
-                            text "[four_tltk.tlstats]" size 26
+                            text "[four_tltk.tlstats!i]" size 26
 
                         if not four_tltk.stlstats:
-                            textbutton _("Calculate Source Stats") action [Function(four_tltk.update_stlstats_screen), Play("audio", "se/sounds/select.ogg")] hovered Play("audio", "se/sounds/select.ogg") style "four_tltk_button"
+                            textbutton _("Calculate String Stats") action [four_tltk.SensitiveFunction(four_tltk.source.exists, four_tltk.update_stlstats_screen), Play("audio", "se/sounds/select.ogg")] hovered Play("audio", "se/sounds/select.ogg") style "four_tltk_button"
                         else:
-                            text "[four_tltk.stlstats]" size 26
+                            text "[four_tltk.stlstats!i]" size 26
 
+                    vbox:
+                        yminimum 300
+
+                        textbutton _("Write Translations"):
+                            action [Play("audio", "se/sounds/select.ogg"),
+                                Confirm("Are you sure you are ready to write translations?\n(Ren'Py will quit after finishing.)",
+                                    [four_tltk.SensitiveFunction(four_tltk.source.exists, four_tltk.write_translations), Quit(confirm=False)])]
+                            hovered Play("audio", "se/sounds/select.ogg")
+                            style "four_tltk_button"
 
 
 
