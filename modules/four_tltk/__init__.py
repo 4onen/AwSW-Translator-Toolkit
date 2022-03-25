@@ -45,3 +45,47 @@ def make_overtranslated_txt(language):
     with io.open('overtranslated.txt','w',encoding='utf-8') as f:
         for line in sorted(map(get_untranslated_info_line, excess_translates)):
             f.write(line)
+
+def write_translate(language, filter, file, translate):
+    file.write(u"# {}:{}\n".format(translate.filename, translate.linenumber))
+    file.write(u"translate {} {}:\n".format(language, translate.identifier.replace('.', '_')))
+    file.write(u"\n")
+
+    for n in translate.block:
+        file.write(u"    # " + n.get_code() + "\n")
+
+    for n in translate.block:
+        file.write(u"    " + n.get_code(filter) + "\n")
+
+    file.write(u"\n")
+
+
+# def write_translates(filename, language, filter):  # @ReservedAssignment
+
+#     fn, common = shorten_filename(filename)
+
+#     # The common directory should not have dialogue in it.
+#     if common:
+#         return
+
+#     tl_filename = os.path.join(renpy.config.gamedir, renpy.config.tl_directory, language, fn)
+
+#     if tl_filename[-1] == "m":
+#         tl_filename = tl_filename[:-1]
+
+#     if language == "None":
+#         language = None
+
+#     translator = renpy.game.script.translator
+
+#     for label, t in translator.file_translates[filename]:
+
+#         if (t.identifier, language) in translator.language_translates:
+#             continue
+
+#         f = open_tl_file(tl_filename)
+
+#         if label is None:
+#             label = ""
+
+#         write_translate(language, filter, f, t)

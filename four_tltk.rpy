@@ -6,26 +6,61 @@ init python in four_tltk:
 
     selected_filter = gtl.empty_filter
 
-    source = "game/mods/"
-    target = "game/mods/"
+    def path_exists(*p):
+        if len(p) > 1:
+            return os.path.exists(os.path.join(*map(unicode,p)))
+        else:
+            return os.path.exists(*p)
 
-    active_input = None
+    class FileInputValue(renpy.store.InputValue):
+        def __init__(self, defaulttext):
+            self.text = defaulttext
+            self.default = False
 
-    def is_active_input(name):
-        return active_input == name
+        def get_text(self):
+            return self.text
 
-    def check_source():
-        return os.path.exists(source)
+        def set_text(self, s):
+            self.text = s
+            renpy.restart_interaction()
 
-    def check_target():
-        return os.path.exists(target)
+        def exists(self):
+            return path_exists(self.get_text())
+
+    source = FileInputValue("game/mods/")
+    target = FileInputValue("game/mods/")
+
+    tlstats = ""
+
+    def update_tlstats_screen():
+        global tlstats
+
+        s = tltk.calculate_tl_stats(source.get_text(), target.get_text())
+
+        tlstats = """
+Ren'Py files found - %u
+TL-able blocks found - %u
+"[preferences.language]"s found - %u
+TL-able blocks translated - %u
+TL-able blocks missing - %u
+Excess TLs - %u
+""" % s
+
+    stlstats = ""
+
+    def update_stlstats_screen():
+        global stlstats
+        stlstats = "String translations (e.g. menu options) not yet implemented."
 
 init -1 python:
     style.four_tltk_button = Style(style.default)
     style.four_tltk_button_text.selected_color = "#aaf"
     style.four_tltk_button_text.insensitive_color = "#777"
     style.four_tltk_button_text.hover_color = "#ffa"
-    style.four_tltk_button_text.drop_shadow = (2,2)
+    style.four_tltk_button_text.size = 26
+
+    style.four_tltk_warningtext = Style(style.default)
+    style.four_tltk_warningtext.color = "#faa"
 
 init:
     screen four_tltk_bg():
@@ -37,59 +72,82 @@ init:
         key "game_menu" action [Hide("four_tltk_bg", transition=dissolve), Hide("four_tltk_screen"), Play("audio", "se/sounds/close.ogg")]
         imagebutton idle "image/ui/close_idle.png" hover "image/ui/close_hover.png" action [Hide("four_tltk_bg", transition=dissolve), Hide("four_tltk_screen"), Play("audio", "se/sounds/close.ogg")] hovered Play("audio", "se/sounds/select.ogg") style "smallwindowclose" xalign 0.945 yalign 0.035 at nav_button
 
+    screen four_tltk_file_select(prefix, value, suffix=""):
+        button action value.Enable():
+            style "menu_choice_button"
+            hbox:
+                if prefix:
+                    text "[prefix]"
+
+                input value value
+                if value.exists():
+                    add "#3f3" size (20,20)
+                else:
+                    add "#f33" size (20,20)
+                if suffix:
+                    text "[suffix]"
+
     screen four_tltk_screen():
         text _("Mod Translator's Toolkit") align (0.5, 0.1) bold True size 40
 
-        vbox:
-            align (0.9, 0.1)
+        if preferences.language is None:
+            text _("Select a non-default language to generate translation files.") style "four_tltk_warningtext" align (0.5, 0.5)
+        else:
+            vbox:
+                align (0.99, 0.1)
 
-            textbutton "Gen untranslated.txt.":
-                action [
-                    Function(four_tltk.tltk.make_untranslated_txt,preferences.language),
-                    Play("audio", "se/sounds/close.ogg"),
-                    Show('nsfw_ok_prompt',dissolve,"untranslated.txt for [preferences.language] has been placed in your game directory."),
-                ]
-                hovered Play("audio", "se/sounds/select.ogg"),
-            
-            textbutton "Gen overtranslated.txt.":
-                action [
-                    Function(four_tltk.tltk.make_overtranslated_txt,preferences.language),
-                    Play("audio", "se/sounds/close.ogg"),
-                    Show('nsfw_ok_prompt',dissolve,"overtranslated.txt for [preferences.language] has been placed in your game directory."),
-                ]
-                hovered Play("audio", "se/sounds/select.ogg"),
+                textbutton _("Gen untranslated.txt."):
+                    action [
+                        Function(four_tltk.tltk.make_untranslated_txt,preferences.language),
+                        Play("audio", "se/sounds/close.ogg"),
+                        Show('nsfw_ok_prompt',dissolve,"untranslated.txt for [preferences.language] has been placed in your game directory."),
+                    ]
+                    hovered Play("audio", "se/sounds/select.ogg"),
+                
+                textbutton _("Gen overtranslated.txt."):
+                    action [
+                        Function(four_tltk.tltk.make_overtranslated_txt,preferences.language),
+                        Play("audio", "se/sounds/close.ogg"),
+                        Show('nsfw_ok_prompt',dissolve,"overtranslated.txt for [preferences.language] has been placed in your game directory."),
+                    ]
+                    hovered Play("audio", "se/sounds/select.ogg"),
 
-        vbox:
-            align (0.5,0.5)
+            vbox:
+                align (0.5,0.5)
+                spacing 50
 
-            hbox:
-                text "Source:"
-                if four_tltk.is_active_input('source'):
-                    input value FieldInputValue(four_tltk, 'source')
-                else:
-                    textbutton "[four_tltk.source]" style 'four_tltk_button':
-                        hovered Play("audio", "se/sounds/select.ogg")
-                        action [Play("audio", "se/sounds/select.ogg"), SetField(four_tltk, 'active_input', 'source')]
-                add ConditionSwitch('four_tltk.check_source()',"#0f0","True","#f00") size (20,20)
-
-            hbox:
-                text "Target:"
-                if four_tltk.is_active_input('target'):
-                    input value FieldInputValue(four_tltk, 'target')
-                else:
-                    textbutton "[four_tltk.target]" style 'four_tltk_button':
-                        hovered Play("audio", "se/sounds/select.ogg")
-                        action [Play("audio", "se/sounds/select.ogg"), SetField(four_tltk, 'active_input', 'target')]
-                add ConditionSwitch('four_tltk.check_target()',"#0f0","True","#f00") size (20,20)
-                text "/tl/[preferences.language]/"
-
-            hbox:
                 vbox:
-                    text _("Filter:")
-                    textbutton _("No filter") action [SetField(four_tltk, 'selected_filter', four_tltk.gtl.null_filter), Play("audio", "se/sounds/select.ogg")] hovered Play("audio", "se/sounds/select.ogg") style "four_tltk_button"
-                    textbutton _("Empty") action [SetField(four_tltk, 'selected_filter', four_tltk.gtl.empty_filter), Play("audio", "se/sounds/select.ogg")] hovered Play("audio", "se/sounds/select.ogg") style "four_tltk_button"
-                    textbutton _("Rot13") action [SetField(four_tltk, 'selected_filter', four_tltk.gtl.rot13_filter), Play("audio", "se/sounds/select.ogg")] hovered Play("audio", "se/sounds/select.ogg") style "four_tltk_button"
-                    textbutton _("Piglatin") action [SetField(four_tltk, 'selected_filter', four_tltk.gtl.piglatin_filter), Play("audio", "se/sounds/select.ogg")] hovered Play("audio", "se/sounds/select.ogg") style "four_tltk_button"
+                    use four_tltk_file_select("Source: ", four_tltk.source)
+                    use four_tltk_file_select("Target: ", four_tltk.target, "/tl/[preferences.language]")
+
+                    if not four_tltk.source.exists():
+                        text "No target." style 'four_tltk_warningtext'
+                    elif not four_tltk.target.exists():
+                        text "Target directory does not exist -- will be created." style 'four_tltk_warningtext'
+                    elif not four_tltk.path_exists(four_tltk.target.get_text(), 'tl', preferences.language):
+                        text "Target's translation directory does does not exist -- will be created." style 'four_tltk_warningtext'
+
+                hbox:
+                    xminimum 1200
+                    xalign 0.5
+                    vbox:
+                        label _("Filter:")
+                        textbutton _("No filter") action [SetField(four_tltk, 'selected_filter', four_tltk.gtl.null_filter), Play("audio", "se/sounds/select.ogg")] hovered Play("audio", "se/sounds/select.ogg") style "four_tltk_button"
+                        textbutton _("Empty") action [SetField(four_tltk, 'selected_filter', four_tltk.gtl.empty_filter), Play("audio", "se/sounds/select.ogg")] hovered Play("audio", "se/sounds/select.ogg") style "four_tltk_button"
+                        textbutton _("Rot13") action [SetField(four_tltk, 'selected_filter', four_tltk.gtl.rot13_filter), Play("audio", "se/sounds/select.ogg")] hovered Play("audio", "se/sounds/select.ogg") style "four_tltk_button"
+                        textbutton _("Piglatin") action [SetField(four_tltk, 'selected_filter', four_tltk.gtl.piglatin_filter), Play("audio", "se/sounds/select.ogg")] hovered Play("audio", "se/sounds/select.ogg") style "four_tltk_button"
+
+                    vbox:
+                        yminimum 300
+                        if not four_tltk.tlstats:
+                            textbutton _("Calculate Translation Stats") action [Function(four_tltk.update_tlstats_screen), Play("audio", "se/sounds/select.ogg")] hovered Play("audio", "se/sounds/select.ogg") style "four_tltk_button"
+                        else:
+                            text "[four_tltk.tlstats]" size 26
+
+                        if not four_tltk.stlstats:
+                            textbutton _("Calculate Source Stats") action [Function(four_tltk.update_stlstats_screen), Play("audio", "se/sounds/select.ogg")] hovered Play("audio", "se/sounds/select.ogg") style "four_tltk_button"
+                        else:
+                            text "[four_tltk.stlstats]" size 26
 
 
 
