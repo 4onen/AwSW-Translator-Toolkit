@@ -1,6 +1,7 @@
 import renpy
 from renpy import ast
 import io
+import os
 
 def get_untranslated_info_line(tobj):
     contents = ""
@@ -59,6 +60,29 @@ def write_translate(language, filter, file, translate):
 
     file.write(u"\n")
 
+def calculate_tl_stats(source, target):
+    if not os.path.exists(source):
+        return None
+
+    targetexists = os.path.exists(target)
+
+    translator = renpy.game.script.translator
+    language = renpy.game.preferences.language
+
+    source_tls = set((tl for tl in translator.default_translates.values() if tl.filename.startswith(source)))
+    source_tl_files = len(set((tl.filename for tl in source_tls)))
+
+    source_tls_translated = set((tl for tl in source_tls if (language, tl.identifier) in translator.language_translates))
+    source_tls_missing = source_tls - source_tls_translated
+
+    if targetexists:
+        target_tls = set((tl for (lang,_),tl in translator.language_translates.items() if lang == language and tl.filename.startswith(target)))
+        target_tl_files = len(set((tl.filename for tl in target_tls)))
+        excess_tls = len(set((tl for tl in target_tls if tl.identifier not in translator.default_translates)))
+
+        return (source_tl_files, target_tl_files, len(source_tls), len(target_tls), len(source_tls_translated), len(source_tls_missing), excess_tls)
+    else:
+        return (source_tl_files, 0, len(source_tls), 0, len(source_tls_translated), len(source_tls_missing), 0)
 
 # def write_translates(filename, language, filter):  # @ReservedAssignment
 
