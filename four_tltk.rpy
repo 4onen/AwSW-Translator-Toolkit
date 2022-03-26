@@ -36,15 +36,18 @@ init python in four_tltk:
     def write_block_translations():
         tltk.write_block_translations(source.get_text(), get_true_target(), selected_filter)
         gtl.close_tl_files()
+        renpy.quit()
 
     def write_string_translations():
         tltk.write_string_translations(source.get_text(), get_true_target(), selected_filter)
         gtl.close_tl_files()
+        renpy.quit()
 
     def write_all_translations():
         tltk.write_all_translations(source.get_text(), get_true_target(), selected_filter)
         tltk.write_string_translations(source.get_text(), get_true_target(), selected_filter)
         gtl.close_tl_files()
+        renpy.quit()
 
     class SensitiveFunction(renpy.store.Function):
         def __init__(self, sensitivity, callable, *args, **kwargs):
@@ -193,21 +196,21 @@ init:
                         textbutton _("Write All Translations"):
                             action [Play("audio", "se/sounds/select.ogg"),
                                 Confirm("Are you sure you are ready to write translations?\n(Ren'Py will quit after finishing.)",
-                                    [four_tltk.SensitiveFunction(four_tltk.source.exists, four_tltk.write_all_translations), Quit(confirm=False)])]
+                                    [four_tltk.SensitiveFunction(four_tltk.source.exists, four_tltk.write_all_translations)])]
                             hovered Play("audio", "se/sounds/select.ogg")
                             style "four_tltk_button"
 
                         textbutton _("Write Block Translations"):
                             action [Play("audio", "se/sounds/select.ogg"),
                                 Confirm("Are you sure you are ready to write translations?\n(Ren'Py will quit after finishing.)",
-                                    [four_tltk.SensitiveFunction(four_tltk.source.exists, four_tltk.write_block_translations), Quit(confirm=False)])]
+                                    [four_tltk.SensitiveFunction(four_tltk.source.exists, four_tltk.write_block_translations)])]
                             hovered Play("audio", "se/sounds/select.ogg")
                             style "four_tltk_button"
 
                         textbutton _("Write String Translations"):
                             action [Play("audio", "se/sounds/select.ogg"),
                                 Confirm("Are you sure you are ready to write translations?\n(Ren'Py will quit after finishing.)",
-                                    [four_tltk.SensitiveFunction(four_tltk.source.exists, four_tltk.write_string_translations), Quit(confirm=False)])]
+                                    [four_tltk.SensitiveFunction(four_tltk.source.exists, four_tltk.write_string_translations)])]
                             hovered Play("audio", "se/sounds/select.ogg")
                             style "four_tltk_button"
 
