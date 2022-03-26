@@ -127,7 +127,6 @@ def write_block_translations(source, target, filter):
 
 def translate_list_files_under(path):
     files = [fn for fn in gtl.translate_list_files() if os.path.relpath(fn).startswith(path)]
-    print(files)
     return files
 
 
@@ -167,7 +166,7 @@ def get_untranslated_strings(language, strings):
 
     stl = renpy.game.script.translator.strings[language].translations
 
-    return [s for s in strings if s not in stl]
+    return [s for s in strings if s.text not in stl]
 
 
 def calculate_string_stats(source):
