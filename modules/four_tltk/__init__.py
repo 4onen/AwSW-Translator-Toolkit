@@ -1,8 +1,10 @@
 import renpy
 from renpy import ast
 import renpy.translation.generation as gtl
+import renpy.translation.scanstrings as stl
 import io
 import os
+import re
 
 def get_untranslated_info_line(tobj):
     contents = ""
@@ -120,6 +122,66 @@ def write_block_translations(source, target, filter):
 
     for tl in sorted(source_tls_missing, key=lambda t: (t.filename, t.linenumber)):
         write_translate(language, filter, target, tl)
+
+
+def translate_list_files_under(path):
+    return [fn for fn in gtl.translate_list_files() if os.path.relpath(fn).startswith(path)]
+
+
+def scan_strings(filename):
+    """
+    Scans `filename`, a file containing Ren'Py script, for translatable
+    strings.
+
+    Returns a list of TranslationString objects.
+    """
+
+    rv = [ ]
+
+    for line, s in renpy.game.script.translator.additional_strings[filename]:  # @UndefinedVariable
+        rv.append(stl.String(filename, line, s, False))
+
+    for _filename, lineno, text in renpy.parser.list_logical_lines(filename):
+
+        for m in re.finditer(stl.STRING_RE, text):
+
+            s = m.group(1)
+            if s is not None:
+                s = s.strip()
+                s = "u" + s
+                s = eval(s)
+
+                if s:
+                    rv.append(stl.String(filename, lineno, s, False))
+
+    return rv
+
+
+def get_untranslated_strings(language, strings):
+    """
+    Returns a list of strings that are untranslated in `language`.
+    """
+
+    stl = renpy.game.script.translator.strings[language].translations
+
+    return [s for s in strings if s not in stl]
+
+
+def calculate_string_stats(source):
+    language = renpy.game.preferences.language
+
+    source_stl_files = translate_list_files_under(source)
+    source_stl_strings = []
+
+    for fn in source_stl_files:
+        source_stl_strings.extend(scan_strings(fn))
+
+    source_stl_strings_untranslated = len(get_untranslated_strings(language, source_stl_strings))
+    source_stl_strings = len(source_stl_strings)
+    source_stl_strings_translated = source_stl_strings - source_stl_strings_untranslated
+
+    return (len(source_stl_files), source_stl_strings, source_stl_strings_translated, source_stl_strings_untranslated)
+
 
 def write_string_translations(source, target, filter):
     raise NotImplementedError()

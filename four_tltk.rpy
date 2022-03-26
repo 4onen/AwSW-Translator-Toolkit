@@ -66,14 +66,14 @@ init python in four_tltk:
 
         if s:
             tlstats = ("""
-    Src Ren'Py files found - %u
-    Tgt Ren'Py files found - %u
-    TL-able blocks found - %u
-    "%%s"s found - %u
-    TL-able blocks translated - %u
-    TL-able blocks missing - %u
-    Excess TLs - %u
-    """ % s) % renpy.store.preferences.language
+Src Ren'Py files found - %u
+Tgt Ren'Py files found - %u
+TL-able blocks found - %u
+"%%s"s found - %u
+TL-able blocks translated - %u
+TL-able blocks missing - %u
+Excess TLs - %u
+""" % s) % renpy.store.preferences.language
         else:
             tlstats = "No Ren'Py files found."
 
@@ -81,7 +81,18 @@ init python in four_tltk:
 
     def update_stlstats_screen():
         global stlstats
-        stlstats = "String translations not yet implemented."
+        
+        s = tltk.calculate_string_stats(source.get_text())
+
+        if s:
+            stlstats = ("""
+Src Ren'Py files found - %u
+TL-able strings found - %u
+TL-able strings translated - %u
+TL-able strings missing - %u
+""" % s)
+        else:
+            stlstats = _("No Ren'Py files found.")
 
 init -1 python:
     style.four_tltk_button = Style(style.default)
@@ -159,11 +170,11 @@ init:
                     use four_tltk_file_select("Target: ", four_tltk.target, "/tl/%s/"%preferences.language)
 
                     if not four_tltk.source.exists():
-                        text "No target." style 'four_tltk_warningtext'
+                        text _("No target.") style 'four_tltk_warningtext'
                     elif not four_tltk.target.exists():
-                        text "Target directory does not exist -- will be created." style 'four_tltk_warningtext'
+                        text _("Target directory does not exist -- will be created.") style 'four_tltk_warningtext'
                     elif not four_tltk.path_exists(four_tltk.target.get_text(), 'tl', preferences.language):
-                        text "Target's translation directory does does not exist -- will be created." style 'four_tltk_warningtext'
+                        text _("Target's translation directory does does not exist -- will be created.") style 'four_tltk_warningtext'
 
                 hbox:
                     xminimum 1200
