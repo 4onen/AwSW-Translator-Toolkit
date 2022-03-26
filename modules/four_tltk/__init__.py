@@ -82,15 +82,15 @@ def get_translated(language, source_tls):
     """
     language_translates = renpy.game.script.translator.language_translates
 
-    return set((tl for tl in source_tls if (language, tl.identifier) in language_translates))
+    return set((tl for tl in source_tls if (tl.identifier, language) in language_translates))
 
 def get_targets(language, target):
     """
     Returns a list of target tl blocks that are already translated.
     """
     language_translates = renpy.game.script.translator.language_translates
-    
-    return set((tl for (lang,_),tl in language_translates.items() if lang == language and tl.filename.startswith(target)))
+
+    return set((tl for (_, lang),tl in language_translates.items() if lang == language and tl.filename.startswith(target)))
 
 def calculate_tl_stats(source, target):
     if not os.path.exists(source):
