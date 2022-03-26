@@ -30,8 +30,21 @@ init python in four_tltk:
     source = FileInputValue("game/mods/")
     target = FileInputValue("game/mods/")
 
-    def write_translations():
-        tltk.write_translations(source.get_text(), target.get_text(), selected_filter)
+    def get_true_target():
+        return os.path.join(target.get_text(), "tl/"+renpy.store.preferences.language)
+
+    def write_block_translations():
+        tltk.write_block_translations(source.get_text(), get_true_target(), selected_filter)
+        gtl.close_tl_files()
+
+    def write_string_translations():
+        tltk.write_string_translations(source.get_text(), get_true_target(), selected_filter)
+        gtl.close_tl_files()
+
+    def write_all_translations():
+        tltk.write_all_translations(source.get_text(), get_true_target(), selected_filter)
+        tltk.write_string_translations(source.get_text(), get_true_target(), selected_filter)
+        gtl.close_tl_files()
 
     class SensitiveFunction(renpy.store.Function):
         def __init__(self, sensitivity, callable, *args, **kwargs):
@@ -46,7 +59,7 @@ init python in four_tltk:
     def update_tlstats_screen():
         global tlstats
 
-        s = tltk.calculate_tl_stats(source.get_text(), target.get_text())
+        s = tltk.calculate_tl_stats(source.get_text(), get_true_target())
 
         if s:
             tlstats = ("""
@@ -177,10 +190,24 @@ init:
                     vbox:
                         yminimum 300
 
-                        textbutton _("Write Translations"):
+                        textbutton _("Write All Translations"):
                             action [Play("audio", "se/sounds/select.ogg"),
                                 Confirm("Are you sure you are ready to write translations?\n(Ren'Py will quit after finishing.)",
-                                    [four_tltk.SensitiveFunction(four_tltk.source.exists, four_tltk.write_translations), Quit(confirm=False)])]
+                                    [four_tltk.SensitiveFunction(four_tltk.source.exists, four_tltk.write_all_translations), Quit(confirm=False)])]
+                            hovered Play("audio", "se/sounds/select.ogg")
+                            style "four_tltk_button"
+
+                        textbutton _("Write Block Translations"):
+                            action [Play("audio", "se/sounds/select.ogg"),
+                                Confirm("Are you sure you are ready to write translations?\n(Ren'Py will quit after finishing.)",
+                                    [four_tltk.SensitiveFunction(four_tltk.source.exists, four_tltk.write_block_translations), Quit(confirm=False)])]
+                            hovered Play("audio", "se/sounds/select.ogg")
+                            style "four_tltk_button"
+
+                        textbutton _("Write String Translations"):
+                            action [Play("audio", "se/sounds/select.ogg"),
+                                Confirm("Are you sure you are ready to write translations?\n(Ren'Py will quit after finishing.)",
+                                    [four_tltk.SensitiveFunction(four_tltk.source.exists, four_tltk.write_string_translations), Quit(confirm=False)])]
                             hovered Play("audio", "se/sounds/select.ogg")
                             style "four_tltk_button"
 

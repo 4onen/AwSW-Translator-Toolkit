@@ -1,5 +1,6 @@
 import renpy
 from renpy import ast
+import renpy.translation.generation as gtl
 import io
 import os
 
@@ -47,69 +48,78 @@ def make_overtranslated_txt(language):
         for line in sorted(map(get_untranslated_info_line, excess_translates)):
             f.write(line)
 
-def write_translate(language, filter, file, translate):
-    file.write(u"# {}:{}\n".format(translate.filename, translate.linenumber))
-    file.write(u"translate {} {}:\n".format(language, translate.identifier.replace('.', '_')))
+def write_translate(language, filter, targetpath, tobj):
+    fn = os.path.basename(tobj.filename)
+    targetfn = os.path.join(targetpath, fn)
+
+    file = gtl.open_tl_file(targetfn)
+
+    file.write(u"# {}:{}\n".format(tobj.filename, tobj.linenumber))
+    file.write(u"translate {} {}:\n".format(language, tobj.identifier.replace('.', '_')))
     file.write(u"\n")
 
-    for n in translate.block:
+    for n in tobj.block:
         file.write(u"    # " + n.get_code() + "\n")
 
-    for n in translate.block:
+    for n in tobj.block:
         file.write(u"    " + n.get_code(filter) + "\n")
 
     file.write(u"\n")
+
+
+def get_sources(source):
+    """
+    Returns a list of source tl blocks that are to be translated.
+    """
+
+    default_translates = renpy.game.script.translator.default_translates
+    
+    return set((tl for tl in default_translates.values() if tl.filename.startswith(source)))
+
+def get_translated(language, source_tls):
+    """
+    Returns a list of translated tl blocks.
+    """
+    language_translates = renpy.game.script.translator.language_translates
+
+    return set((tl for tl in source_tls if (language, tl.identifier) in language_translates))
+
+def get_targets(language, target):
+    """
+    Returns a list of target tl blocks that are already translated.
+    """
+    language_translates = renpy.game.script.translator.language_translates
+    
+    return set((tl for (lang,_),tl in language_translates.items() if lang == language and tl.filename.startswith(target)))
 
 def calculate_tl_stats(source, target):
     if not os.path.exists(source):
         return None
 
-    targetexists = os.path.exists(target)
-
     translator = renpy.game.script.translator
     language = renpy.game.preferences.language
 
-    source_tls = set((tl for tl in translator.default_translates.values() if tl.filename.startswith(source)))
+    source_tls = get_sources(source)
     source_tl_files = len(set((tl.filename for tl in source_tls)))
 
-    source_tls_translated = set((tl for tl in source_tls if (language, tl.identifier) in translator.language_translates))
+    source_tls_translated = get_translated(language, source_tls)
     source_tls_missing = source_tls - source_tls_translated
 
-    if targetexists:
-        target_tls = set((tl for (lang,_),tl in translator.language_translates.items() if lang == language and tl.filename.startswith(target)))
-        target_tl_files = len(set((tl.filename for tl in target_tls)))
-        excess_tls = len(set((tl for tl in target_tls if tl.identifier not in translator.default_translates)))
+    target_tls = get_targets(language, target)
+    target_tl_files = len(set((tl.filename for tl in target_tls)))
+    excess_tls = len(set((tl for tl in target_tls if tl.identifier not in translator.default_translates)))
 
-        return (source_tl_files, target_tl_files, len(source_tls), len(target_tls), len(source_tls_translated), len(source_tls_missing), excess_tls)
-    else:
-        return (source_tl_files, 0, len(source_tls), 0, len(source_tls_translated), len(source_tls_missing), 0)
+    return (source_tl_files, target_tl_files, len(source_tls), len(target_tls), len(source_tls_translated), len(source_tls_missing), excess_tls)
 
-# def write_translates(filename, language, filter):  # @ReservedAssignment
+def write_block_translations(source, target, filter):
+    language = renpy.game.preferences.language
 
-#     fn, common = shorten_filename(filename)
+    source_tls = get_sources(source)
+    source_tls_translated = get_translated(language, source_tls)
+    source_tls_missing = source_tls - source_tls_translated
 
-#     # The common directory should not have dialogue in it.
-#     if common:
-#         return
+    for tl in sorted(source_tls_missing, key=lambda t: (t.filename, t.linenumber)):
+        write_translate(language, filter, target, tl)
 
-#     tl_filename = os.path.join(renpy.config.gamedir, renpy.config.tl_directory, language, fn)
-
-#     if tl_filename[-1] == "m":
-#         tl_filename = tl_filename[:-1]
-
-#     if language == "None":
-#         language = None
-
-#     translator = renpy.game.script.translator
-
-#     for label, t in translator.file_translates[filename]:
-
-#         if (t.identifier, language) in translator.language_translates:
-#             continue
-
-#         f = open_tl_file(tl_filename)
-
-#         if label is None:
-#             label = ""
-
-#         write_translate(language, filter, f, t)
+def write_string_translations(source, target, filter):
+    raise NotImplementedError()
