@@ -44,7 +44,7 @@ init python in four_tltk:
         renpy.quit()
 
     def write_all_translations():
-        tltk.write_all_translations(source.get_text(), get_true_target(), selected_filter)
+        tltk.write_block_translations(source.get_text(), get_true_target(), selected_filter)
         tltk.write_string_translations(source.get_text(), get_true_target(), selected_filter)
         gtl.close_tl_files()
         renpy.quit()

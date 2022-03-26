@@ -1,5 +1,6 @@
 import renpy
 from renpy import ast
+from renpy.translation import quote_unicode
 import renpy.translation.generation as gtl
 import renpy.translation.scanstrings as stl
 import io
@@ -125,7 +126,9 @@ def write_block_translations(source, target, filter):
 
 
 def translate_list_files_under(path):
-    return [fn for fn in gtl.translate_list_files() if os.path.relpath(fn).startswith(path)]
+    files = [fn for fn in gtl.translate_list_files() if os.path.relpath(fn).startswith(path)]
+    print(files)
+    return files
 
 
 def scan_strings(filename):
@@ -184,4 +187,26 @@ def calculate_string_stats(source):
 
 
 def write_string_translations(source, target, filter):
-    raise NotImplementedError()
+    language = renpy.game.preferences.language
+
+    source_stl_files = translate_list_files_under(source)
+    for filename in source_stl_files:
+        strings = scan_strings(filename)
+        strings_untranslated = get_untranslated_strings(language, strings)
+
+        if strings_untranslated:
+
+            fn = os.path.basename(filename)
+            targetfn = os.path.join(target, fn)
+
+            file = gtl.open_tl_file(targetfn)
+
+
+            file.write(u"translate {} strings:\n\n".format(language))
+
+            for s in strings_untranslated:
+                text = filter(s.text)
+
+                file.write(u"    # {}:{}\n".format(s.elided, s.line))
+                file.write(u"    old \"{}\"\n".format(quote_unicode(s.text)))
+                file.write(u"    new \"{}\"\n\n".format(quote_unicode(text)))
