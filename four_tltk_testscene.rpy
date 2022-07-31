@@ -10,7 +10,7 @@ label four_tltk_testscene_second_label:
     s "Hello! Welcome to the translator's toolkit test scene."
 
 label four_tltk_testscene_menu_tutorial:
-    s "Another important thing you'll find yourself translating is {i}menu options{i}."
+    s "Another important thing you'll find yourself translating is {i}menu options{/i}."
     s "Menu options are considered the same as a regular string in code, as translated with the _() function."
     menu:
         "I understand that menu options are important.":
