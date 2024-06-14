@@ -46,7 +46,7 @@ init python in four_tltk:
         renpy.change_language(language_mod)
         target = os.path.join(language_mod_path, "resource/tl/"+language_mod)
         tltk.write_block_translations(source.get_text(), target, selected_filter)
-        tltk.write_string_translations(source.get_text(), target, selected_filter, collate=collate, dedup=dedup, pyfmt=False)
+        tltk.write_string_translations(source.get_text(), target, selected_filter, collate=collate, dedup=dedup, pyfmt=False, pyext=False)
         gtl.close_tl_files()
         renpy.quit()
 

@@ -328,24 +328,25 @@ def _write_string_translations_in_file(
 def write_string_translations(source, target, filter, collate, dedup, pyfmt, pyext):
     language = renpy.game.preferences.language
 
-    if not pyfmt:
+    if not (pyfmt and collate):
         pyext = False
 
-    if dedup:
-        translated_strings = set()
-
     source_stl_files = translate_list_files_under(source)
-    if collate:
+    if collate and dedup:
+        collated = {}
+    elif collate:
         collated = []
+    elif dedup:
+        translated_strings = set()
     for filename in source_stl_files:
         strings = scan_strings(filename)
         strings_untranslated = get_untranslated_strings(language, strings)
 
         if dedup:
             # Dedup the given file
-            dedup_dict = {}
+            dedup_dict = collated if collate else {}
             for s in strings_untranslated:
-                if s.text in translated_strings:
+                if not collate and s.text in translated_strings:
                     continue
                 if s.text not in dedup_dict:
                     dedup_dict[s.text] = s
@@ -357,10 +358,11 @@ def write_string_translations(source, target, filter, collate, dedup, pyfmt, pye
                     locations.append((s.elided, s.line))
                     old.locations = locations
             strings_untranslated = list(dedup_dict.viewvalues())
-            translated_strings.update(dedup_dict.viewkeys())
-
+            if not collate:
+                translated_strings.update(dedup_dict.viewkeys())
         if collate:
-            collated.extend(strings_untranslated)
+            if not dedup:
+                collated.extend(strings_untranslated)
         elif strings_untranslated:
 
             fn = os.path.basename(filename)
@@ -374,4 +376,5 @@ def write_string_translations(source, target, filter, collate, dedup, pyfmt, pye
         blockstart = string_translation_py_pyfmt_blockstart if pyext else string_translation_rpy_pyfmt_blockstart
         targetfn = os.path.join(target, 'strings.'+ext)
         file = gtl.open_tl_file(targetfn)
-        _write_string_translations_in_file(file, language, collated, filter, pyfmt, blockstart=blockstart)
+        strings_untranslated = list(collated.viewvalues()) if dedup else collated
+        _write_string_translations_in_file(file, language, strings_untranslated, filter, pyfmt, blockstart=blockstart)
