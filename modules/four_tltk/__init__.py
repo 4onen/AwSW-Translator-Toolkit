@@ -311,7 +311,7 @@ def _write_string_translations_in_file(
         file.write(
             string_translation_template_end
         )
-        if blockstart == string_translation_py_pyfmt_blockstart and pyfmt:
+        if blockstart == string_translation_py_pyfmt_blockstart:
             file.write(u"register_strings()")
     else:
         file.write(u"translate {} strings:\n\n".format(language))
@@ -325,8 +325,11 @@ def _write_string_translations_in_file(
             file.write(u"    new \"{}\"\n\n".format(quote_unicode(text)))
 
 
-def write_string_translations(source, target, filter, collate, dedup, pyfmt):
+def write_string_translations(source, target, filter, collate, dedup, pyfmt, pyext):
     language = renpy.game.preferences.language
+
+    if not pyfmt:
+        pyext = False
 
     if dedup:
         translated_strings = set()
@@ -367,7 +370,8 @@ def write_string_translations(source, target, filter, collate, dedup, pyfmt):
             _write_string_translations_in_file(file, language, strings_untranslated, filter, pyfmt, blockstart=string_translation_rpy_pyfmt_blockstart)
 
     if collate:
-        ext = 'py' if pyfmt else 'rpy'
+        ext = 'py' if pyext else 'rpy'
+        blockstart = string_translation_py_pyfmt_blockstart if pyext else string_translation_rpy_pyfmt_blockstart
         targetfn = os.path.join(target, 'strings.'+ext)
         file = gtl.open_tl_file(targetfn)
-        _write_string_translations_in_file(file, language, collated, filter, pyfmt, blockstart=string_translation_py_pyfmt_blockstart)
+        _write_string_translations_in_file(file, language, collated, filter, pyfmt, blockstart=blockstart)

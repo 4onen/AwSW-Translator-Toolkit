@@ -8,6 +8,7 @@ init python in four_tltk:
     collate = True
     dedup = True
     pyfmt = True
+    pyext = False
 
     def path_exists(*p):
         if len(p) > 1:
@@ -76,13 +77,13 @@ init python in four_tltk:
         renpy.quit()
 
     def write_string_translations():
-        tltk.write_string_translations(source.get_text(), get_true_target(), selected_filter, collate=collate, dedup=dedup, pyfmt=pyfmt)
+        tltk.write_string_translations(source.get_text(), get_true_target(), selected_filter, collate=collate, dedup=dedup, pyfmt=pyfmt, pyext=pyext)
         gtl.close_tl_files()
         renpy.quit()
 
     def write_all_translations():
         tltk.write_block_translations(source.get_text(), get_true_target(), selected_filter)
-        tltk.write_string_translations(source.get_text(), get_true_target(), selected_filter, collate=collate, dedup=dedup, pyfmt=pyfmt)
+        tltk.write_string_translations(source.get_text(), get_true_target(), selected_filter, collate=collate, dedup=dedup, pyfmt=pyfmt, pyext=pyext)
         gtl.close_tl_files()
         renpy.quit()
 
@@ -192,6 +193,13 @@ init:
 
         if preferences.language is None:
             text _("Select a non-default language to generate translation files.") style "four_tltk_warningtext" align (0.5, 0.5)
+            hbox:
+                align (0.5, 0.6)
+                use four_tltk_language_select(four_tltk.language_name)
+                textbutton _("Change Language"):
+                    action [four_tltk.SensitiveFunction(four_tltk.language_name.exists, four_tltk.change_language_to_given), Play("audio", "se/sounds/select.ogg")]
+                    hovered Play("audio", "se/sounds/select.ogg")
+                    style "four_tltk_button"
 
         else:
             vbox:
@@ -312,6 +320,10 @@ init:
                                 text _("PyFmt") style "four_tltk_button_text"
                                 textbutton _("Y") action [SetField(four_tltk, 'pyfmt', True), Play("audio", "se/sounds/select.ogg")] hovered Play("audio", "se/sounds/select.ogg") style "four_tltk_button"
                                 textbutton _("N") action [SetField(four_tltk, 'pyfmt', False), Play("audio", "se/sounds/select.ogg")] hovered Play("audio", "se/sounds/select.ogg") style "four_tltk_button"
+                            hbox:
+                                text _("PyExt") style "four_tltk_button_text"
+                                textbutton _("Y") action [SetField(four_tltk, 'pyext', True), Play("audio", "se/sounds/select.ogg")] hovered Play("audio", "se/sounds/select.ogg") style "four_tltk_button"
+                                textbutton _("N") action [SetField(four_tltk, 'pyext', False), Play("audio", "se/sounds/select.ogg")] hovered Play("audio", "se/sounds/select.ogg") style "four_tltk_button"
 
 
 
